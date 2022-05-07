@@ -11,6 +11,9 @@
     <description>Simple CLI tool to generate IBANs</description>
 
     <properties>
+        <app-main-class>com.github.atgomes.ibangenerator.IbanGeneratorCommand</app-main-class>
+        <app-distribution-directory>${project.build.directory}/distributions/app</app-distribution-directory>
+        <executable-suffix/>
         <java.version>17</java.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
@@ -18,8 +21,13 @@
         <picocli.version>4.6.3</picocli.version>
         <lombok.version>1.18.22</lombok.version>
         <commons-lang3.version>3.12.0</commons-lang3.version>
-        <appassembler-maven-plugin.version>1.10</appassembler-maven-plugin.version>
+        <appassembler-maven-plugin.version>2.1.0</appassembler-maven-plugin.version>
         <iban4j.version>3.2.1</iban4j.version>
+        <exec-maven-plugin.version>1.6.0</exec-maven-plugin.version>
+        <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
+        <maven-jar-plugin.version>3.2.0</maven-jar-plugin.version>
+        <maven-assembly-plugin.version>3.2.0</maven-assembly-plugin.version>
+        <jreleaser-maven-plugin.version>1.0.0</jreleaser-maven-plugin.version>
     </properties>
 
     <dependencies>
@@ -49,15 +57,128 @@
         <plugins>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>${exec-maven-plugin.version}</version>
+                <configuration>
+                    <mainClass>${app-main-class}</mainClass>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven-compiler-plugin.version}</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>${maven-jar-plugin.version}</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>${app-main-class}</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
                 <artifactId>appassembler-maven-plugin</artifactId>
                 <version>${appassembler-maven-plugin.version}</version>
                 <configuration>
+                    <assembleDirectory>${project.build.directory}/binary</assembleDirectory>
+                    <repositoryLayout>flat</repositoryLayout>
+                    <repositoryName>lib</repositoryName>
                     <programs>
                         <program>
-                            <mainClass>com.github.atgomes.ibangenerator.IbanGeneratorCommand</mainClass>
+                            <mainClass>${app-main-class}</mainClass>
                             <id>ibangen</id>
                         </program>
                     </programs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-distribution</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>assemble</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>${maven-assembly-plugin.version}</version>
+                <configuration>
+                    <attach>false</attach>
+                    <appendAssemblyId>false</appendAssemblyId>
+                    <descriptors>
+                        <descriptor>src/main/assembly/assembly.xml</descriptor>
+                    </descriptors>
+                    <outputDirectory>${app-distribution-directory}</outputDirectory>
+                    <workDirectory>${project.build.directory}/assembly/work</workDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-distribution</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.jreleaser</groupId>
+                <artifactId>jreleaser-maven-plugin</artifactId>
+                <version>${jreleaser-maven-plugin.version}</version>
+                <configuration>
+                    <jreleaser>
+                        <project>
+                            <website>https://example.com</website>
+                            <license>MIT</license>
+                            <authors>Andre Gomes</authors>
+                            <java>
+                                <mainClass>${app-main-class}</mainClass>
+                            </java>
+                        </project>
+                        <release>
+                            <github>
+                                <owner>atgomes</owner>
+                                <tagName>{{projectVersion}}</tagName>
+                                <releaseName>{{projectVersion}}</releaseName>
+                                <overwrite>true</overwrite>
+                                <changelog>
+                                    <formatted>ALWAYS</formatted>
+                                    <format>- {{commitShortHash}} {{commitTitle}}</format>
+                                    <preset>conventional-commits</preset>
+                                    <contributors>
+                                        <format>- {{contributorName}}</format>
+                                    </contributors>
+                                    <hide>
+                                        <categories>Merge</categories>
+                                        <contributors>GitHub,dependabot</contributors>
+                                    </hide>
+                                </changelog>
+                            </github>
+                        </release>
+                        <distributions>
+                            <app>
+                                <artifacts>
+                                    <artifact>
+                                        <path>
+                                            ${app-distribution-directory}/${project.artifactId}-${project.version}.zip
+                                        </path>
+                                    </artifact>
+                                    <artifact>
+                                        <path>
+                                            ${app-distribution-directory}/${project.artifactId}-${project.version}.tar.gz
+                                        </path>
+                                    </artifact>
+                                </artifacts>
+                            </app>
+                        </distributions>
+                    </jreleaser>
                 </configuration>
             </plugin>
         </plugins>
