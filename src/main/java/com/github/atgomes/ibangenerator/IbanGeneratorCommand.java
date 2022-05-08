@@ -9,13 +9,14 @@ import java.util.concurrent.Callable;
 import static picocli.CommandLine.Command;
 import static picocli.CommandLine.Parameters;
 
-@Command(name = "checksum", mixinStandardHelpOptions = true, version = "checksum 4.0",
-        description = "Prints the checksum (SHA-256 by default) of a file to STDOUT.")
+@Command(name = "ibangen",
+        mixinStandardHelpOptions = true,
+        versionProvider = PropertyFileVersionProvider.class,
+        description = "Prints a random valid IBAN for the provided country code to STDOUT.")
 public class IbanGeneratorCommand implements Callable<Integer> {
 
     @Parameters(index = "0", description = "Country code for the IBAN")
     private String countryISO2Code;
-
 
     @Override
     public Integer call() {

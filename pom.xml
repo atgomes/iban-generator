@@ -12,6 +12,7 @@
 
     <properties>
         <app-main-class>com.github.atgomes.ibangenerator.IbanGeneratorCommand</app-main-class>
+        <app-assemble-directory>${project.build.directory}/appassembler</app-assemble-directory>
         <app-distribution-directory>${project.build.directory}/distributions/app</app-distribution-directory>
         <executable-suffix/>
         <java.version>17</java.version>
@@ -85,7 +86,7 @@
                 <artifactId>appassembler-maven-plugin</artifactId>
                 <version>${appassembler-maven-plugin.version}</version>
                 <configuration>
-                    <assembleDirectory>${project.build.directory}/binary</assembleDirectory>
+                    <assembleDirectory>${app-assemble-directory}</assembleDirectory>
                     <repositoryLayout>flat</repositoryLayout>
                     <repositoryName>lib</repositoryName>
                     <programs>
@@ -121,7 +122,7 @@
                 <executions>
                     <execution>
                         <id>make-distribution</id>
-                        <phase>verify</phase>
+                        <phase>package</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>
@@ -182,6 +183,12 @@
                 </configuration>
             </plugin>
         </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
     </build>
 
 </project>
